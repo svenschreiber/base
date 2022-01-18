@@ -44,7 +44,7 @@ typedef double f64;
 
 struct String {
     char *str;
-    s32 size;
+    u32 size;
 };
 
 #endif

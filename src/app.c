@@ -1,5 +1,6 @@
 #include "base.h"
 #include "platform.h"
+#include "memory_arena.h"
 
 void app_init() {
 
