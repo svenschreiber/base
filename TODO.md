@@ -4,5 +4,6 @@ WIN32:
 - [x] Logging
 - [x] File loading
 - [x] Memory management (Memory Arenas)
-- [ ] Keyboard/Mouse event handling
+- [x] Keyboard/Mouse event handling
 - [ ] OpenGL Context/Procedures
+- [ ] Basic vector math

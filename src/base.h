@@ -42,6 +42,7 @@ typedef double f64;
 // =============================
 // >> USEFUL STRUCTS
 
+typedef struct String String;
 struct String {
     char *str;
     u32 size;
