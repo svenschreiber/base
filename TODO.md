@@ -5,5 +5,6 @@ WIN32:
 - [x] File loading
 - [x] Memory management (Memory Arenas)
 - [x] Keyboard/Mouse event handling
-- [ ] OpenGL Context/Procedures
+- [x] OpenGL Context/Procedures
 - [ ] Basic vector math
+- [ ] Time

@@ -1,7 +1,9 @@
 #include <windows.h>
+#include "win32_opengl.c"
 
 static Platform_State global_platform_state;
 static HDC            global_window_dc;
+static HGLRC          global_opengl_rc;
 static b32            tracking_mouse = 0;
 
 void * platform_reserve_memory(u64 size) {
@@ -89,6 +91,7 @@ LRESULT CALLBACK win32_window_proc(HWND window, UINT message, WPARAM wparam, LPA
         case WM_SIZE: {
             platform_state->window_width  = LOWORD(lparam);
             platform_state->window_height = HIWORD(lparam);
+            glViewport(0, 0, platform_state->window_width, platform_state->window_height);
             PostMessage(window, WM_PAINT, 0, 0);
         } break;
 
@@ -354,6 +357,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
     }
 
     global_window_dc = GetDC(window);
+    win32_create_opengl_context(&global_opengl_rc, global_window_dc);
 
     app_init();
 
@@ -364,7 +368,12 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
         win32_process_pending_messages();
         
         app_update();
+
+        wglSwapLayerBuffers(global_window_dc, WGL_SWAP_MAIN_PLANE);
     }
+
+    wglMakeCurrent(global_window_dc, 0);
+    wglDeleteContext(global_opengl_rc);
 
     return 0;
 }
