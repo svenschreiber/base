@@ -322,12 +322,17 @@ LRESULT CALLBACK win32_window_proc(HWND window, UINT message, WPARAM wparam, LPA
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int show_code)
 {
+    LARGE_INTEGER perf_count_frequency_result;
+    QueryPerformanceFrequency(&perf_count_frequency_result);
+    s64 perf_count_frequency = perf_count_frequency_result.QuadPart;
+    
     platform_state = &global_platform_state;
     {
         platform_state->window_width  = PLATFORM_DEFAULT_WINDOW_WIDTH;
         platform_state->window_height = PLATFORM_DEFAULT_WINDOW_HEIGHT;
         platform_state->running       = 1;
         platform_state->event_count   = 0;
+        platform_state->delta         = 0;
     }
 
 
@@ -364,12 +369,22 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
     ShowWindow(window, show_code);
     UpdateWindow(window);
 
+    LARGE_INTEGER last_counter;
+    QueryPerformanceCounter(&last_counter);
+    LARGE_INTEGER end_counter;
+    
+
     while (platform_state->running) {
         win32_process_pending_messages();
         
         app_update();
 
         wglSwapLayerBuffers(global_window_dc, WGL_SWAP_MAIN_PLANE);
+
+        QueryPerformanceCounter(&end_counter);
+        s64 counter_elapsed = end_counter.QuadPart - last_counter.QuadPart;
+        platform_state->delta = (f32)counter_elapsed / (f32)perf_count_frequency;
+        last_counter = end_counter;
     }
 
     wglMakeCurrent(global_window_dc, 0);

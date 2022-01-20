@@ -7,4 +7,4 @@ WIN32:
 - [x] Keyboard/Mouse event handling
 - [x] OpenGL Context/Procedures
 - [ ] Basic vector math
-- [ ] Time
+- [x] Time

@@ -48,6 +48,7 @@ struct Platform_State {
     s32 window_width;
     s32 window_height;
     b32 running;
+    f32 delta;
     u32 event_count;
     Platform_Event *events;
 };
