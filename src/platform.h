@@ -11,6 +11,8 @@
 // =============================
 // >> PLATFORM EVENTS
 
+#define PLATFORM_MAX_EVENTS            1024
+
 #define PLATFORM_EVENT_NONE            0x00
 #define PLATFORM_EVENT_KEY_PRESS       0x01
 #define PLATFORM_EVENT_KEY_RELEASE     0x02
@@ -18,7 +20,7 @@
 #define PLATFORM_EVENT_MOUSE_PRESS     0x04
 #define PLATFORM_EVENT_MOUSE_RELEASE   0x05
 #define PLATFORM_EVENT_MOUSE_MOVE      0x06
-#define PLATFORM_EVENT_MOUSE_SCROLL          0x07
+#define PLATFORM_EVENT_MOUSE_SCROLL    0x07
 #define PLATFORM_EVENT_CURSOR_LEAVE    0x08
 #define PLATFORM_EVENT_CURSOR_ENTER    0x09
 
@@ -47,7 +49,7 @@ struct Platform_State {
     s32 window_height;
     b32 running;
     u32 event_count;
-    Platform_Event events[1024];
+    Platform_Event *events;
 };
 
 static Platform_State *platform_state = 0;
@@ -73,7 +75,7 @@ void platform_push_event(Platform_Event event);
 
 #ifdef PLATFORM_IMPLEMENTATION
 void platform_push_event(Platform_Event event) {
-    if (platform_state->event_count < ArrayCount(platform_state->events)) {
+    if (platform_state->event_count < PLATFORM_MAX_EVENTS) {
         platform_state->events[platform_state->event_count] = event;
         platform_state->event_count += 1;
     }

@@ -6,6 +6,7 @@
 #define MEM_ARENA_ALIGN_DEFAULT 8
 
 #define PushData(arena,T,c) ( (T*)(mem_arena_push((arena),sizeof(T)*(c))) )
+#define PushStruct(arena,T) PushData(arena,T,1);
 
 typedef struct Mem_Arena Mem_Arena;
 struct Mem_Arena {

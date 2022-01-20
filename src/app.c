@@ -4,6 +4,9 @@
 #include "platform.h"
 #include "key_input.h"
 #include "memory_arena.h"
+#include "app.h"
+
+static App_Data *app_data = 0;
 
 static void app_process_events() {
     for (u32 i = 0; i < platform_state->event_count; ++i) {
@@ -48,6 +51,14 @@ static void app_process_events() {
 
 void app_init() {
 
+    {
+        Mem_Arena temp = mem_arena_init(MB(32));
+        app_data = PushStruct(&temp, App_Data);
+        app_data->arena = PushStruct(&temp, Mem_Arena);
+        *app_data->arena = temp;
+    }
+
+    platform_state->events = PushData(app_data->arena, Platform_Event, PLATFORM_MAX_EVENTS);
 }
 
 void app_update() {
