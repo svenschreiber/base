@@ -80,6 +80,8 @@ void app_update() {
     glVertex3f( 0.0f,  0.5f, 0.0f);
         
     glEnd();
+
+    platform_swap_buffers();
 }
 
 

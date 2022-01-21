@@ -6,6 +6,10 @@ static HDC            global_window_dc;
 static HGLRC          global_opengl_rc;
 static b32            tracking_mouse = 0;
 
+void platform_swap_buffers() {
+    wglSwapLayerBuffers(global_window_dc, WGL_SWAP_MAIN_PLANE);
+}
+
 void * platform_reserve_memory(u64 size) {
     void *mem = VirtualAlloc(0, size, MEM_RESERVE, PAGE_NOACCESS);
     return mem;
@@ -378,8 +382,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
         win32_process_pending_messages();
         
         app_update();
-
-        wglSwapLayerBuffers(global_window_dc, WGL_SWAP_MAIN_PLANE);
 
         QueryPerformanceCounter(&end_counter);
         s64 counter_elapsed = end_counter.QuadPart - last_counter.QuadPart;

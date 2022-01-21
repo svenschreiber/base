@@ -66,6 +66,8 @@ void * platform_reserve_memory(u64 size);
 void platform_commit_memory(void *mem, u64 size);
 void platform_release_memory(void *mem);
 void platform_decommit(void *mem, u64 size);
+void platform_swap_buffers();
+// void* platform_get_gl_proc_address(char *function_name); already declared in opengl.h, but has to be implemented aswell.
 
 // > Application Specific
 void platform_push_event(Platform_Event event);
