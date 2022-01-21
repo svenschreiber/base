@@ -44,12 +44,12 @@ static mat4 m4_identity() {
 
 static mat4 m4_mul_m4(mat4 a, mat4 b) {
     mat4 result = {0};
-    for (int j = 0; j < 4; ++j) {
-        for (int i = 0; i < 4; ++i) {
-            result.data[i][j] = (a.data[0][j] * b.data[i][0] +
-                                 a.data[1][j] * b.data[i][1] +
-                                 a.data[2][j] * b.data[i][2] +
-                                 a.data[3][j] * b.data[i][3]);
+    for (int y = 0; y < 4; ++y) {
+        for (int x = 0; x < 4; ++x) {
+            result.data[y][x] = (a.data[y][0] * b.data[0][x] +
+                                 a.data[y][1] * b.data[1][x] +
+                                 a.data[y][2] * b.data[2][x] +
+                                 a.data[y][3] * b.data[3][x]);
         }
     }
     return result;
@@ -80,14 +80,46 @@ static f32 v4_dot(vec4 a, vec4 b) {
     return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 }
 
-static vec4 v4_mul_m4(vec4 a, mat4 b) {
+static vec4 m4_mul_v4(mat4 a, vec4 b) {
     vec4 result = {0};
     for (int i = 0; i < 4; ++i) {
-        result.data[i] = (a.data[0] * b.data[0][i] +
-                          a.data[1] * b.data[1][i] +
-                          a.data[2] * b.data[2][i] +
-                          a.data[3] * b.data[3][i]);
+        result.data[i] = (a.data[i][0] * b.data[0] +
+                          a.data[i][1] * b.data[1] +
+                          a.data[i][2] * b.data[2] +
+                          a.data[i][3] * b.data[3]);
     }
     return result;
 }
 
+static mat4 m4_scale(mat4 a, vec3 scale) {
+    mat4 result = m4_identity();
+    result.data[0][0] = scale.x;
+    result.data[1][1] = scale.y;
+    result.data[2][2] = scale.z;
+    return result;
+}
+
+static mat4 m4_translate(mat4 a, vec3 translation) {
+    mat4 result = m4_identity();
+    result.data[0][3] = translation.x;
+    result.data[1][3] = translation.y;
+    result.data[2][3] = translation.z;
+    return result;
+}
+
+static mat4 m4_rotate(mat4 a, vec3 axis, f32 theta) {
+    mat4 result = m4_identity();
+    result.data[0][0] = cosf(theta) + axis.x * axis.x * (1.0f - cosf(theta));
+    result.data[0][1] = axis.x * axis.y * (1.0f - cosf(theta)) - axis.z * sinf(theta);
+    result.data[0][2] = axis.x * axis.z * (1.0f - cosf(theta)) + axis.y * sinf(theta);
+
+    result.data[1][0] = axis.y * axis.x * (1.0f - cosf(theta)) + axis.z * sinf(theta);
+    result.data[1][1] = cosf(theta) + axis.y * axis.y * (1.0f - cosf(theta));
+    result.data[1][2] = axis.y * axis.z * (1.0f - cosf(theta)) - axis.x * sinf(theta);
+
+    result.data[2][0] = axis.z * axis.x * (1.0f - cosf(theta)) - axis.y * sinf(theta);
+    result.data[2][1] = axis.z * axis.y * (1.0f - cosf(theta)) + axis.x * sinf(theta);
+    result.data[2][2] = cosf(theta) + axis.z * axis.z * (1.0f - cosf(theta));
+    
+    return result;
+}
