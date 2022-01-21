@@ -55,9 +55,9 @@ void platform_log(char *format, ...) {
     va_end(args);
 }
 
-static Vec2i win32_get_mouse_pos(HWND window)
+static ivec2 win32_get_mouse_pos(HWND window)
 {
-    Vec2i result = {0};
+    ivec2 result = {0};
     POINT mouse_pos;
     GetCursorPos(&mouse_pos);
     ScreenToClient(window, &mouse_pos);

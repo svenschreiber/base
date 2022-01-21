@@ -1,5 +1,6 @@
 #include "base.h"
 #include "math.h"
+#include "math.c"
 #define PLATFORM_IMPLEMENTATION
 #include "platform.h"
 #include "key_input.h"

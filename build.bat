@@ -5,7 +5,7 @@ set project_name=app
 
 set defines=-DBUILD_WIN32=1
 
-set warning_exeptions=-wd4100
+set warning_exeptions=-wd4100 -wd4201
 set common_compiler_flags= -MTd -GR -EHa-  %optimization% -Oi -W4 %warning_exeptions% -nologo -FC -Z7
 set common_linker_flags=-incremental:no -opt:ref user32.lib gdi32.lib opengl32.lib
 

@@ -33,7 +33,7 @@ struct Platform_Event {
     s32 key_index;
     s32 key_modifiers;
     u32 character;
-    Vec2i mouse_pos;
+    ivec2 mouse_pos;
     s32 scroll_delta;
 };
 
