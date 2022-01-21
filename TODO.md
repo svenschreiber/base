@@ -6,5 +6,5 @@ WIN32:
 - [x] Memory management (Memory Arenas)
 - [x] Keyboard/Mouse event handling
 - [x] OpenGL Context/Procedures
-- [ ] Basic vector math
+- [x] Basic vector math
 - [x] Time
