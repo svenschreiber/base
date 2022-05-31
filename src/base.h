@@ -39,14 +39,4 @@ typedef double f64;
 
 #define Assert(expression) if(!(expression)) { *(int *)0 = 0; }
 
-
-// =============================
-// >> USEFUL STRUCTS
-
-typedef struct String String;
-struct String {
-    char *str;
-    u32 size;
-};
-
 #endif

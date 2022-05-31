@@ -1,10 +1,13 @@
 #include "base.h"
 #include "math.h"
 #include "math.c"
-#define PLATFORM_IMPLEMENTATION
+#define PLATFORM_IMPL
 #include "platform.h"
+#define MEMORY_IMPL
+#include "memory.h"
+#define STRING_IMPL
+#include "string.h"
 #include "key_input.h"
-#include "memory_arena.h"
 #include "opengl.h"
 #include "app.h"
 
@@ -15,35 +18,35 @@ static void app_process_events() {
         Platform_Event *event = &platform_state->events[i];
         switch (event->type) {
 
-            case PLATFORM_EVENT_KEY_PRESS: {
+            case Platform_Event_Type_Key_Press: {
                 platform_log("%s pressed!\n", get_key_name(event->key_index).str);
             } break;
 
-            case PLATFORM_EVENT_KEY_RELEASE: {
+            case Platform_Event_Type_Key_Release: {
                 platform_log("%s released!\n", get_key_name(event->key_index).str);
             } break;
 
-            case PLATFORM_EVENT_CHARACTER_INPUT: {
+            case Platform_Event_Type_Character_Input: {
                 platform_log("%c typed!\n", (char)event->character);
             } break;
 
-            case PLATFORM_EVENT_MOUSE_PRESS: {
+            case Platform_Event_Type_Mouse_Press: {
                 platform_log("%s pressed!\n", get_key_name(event->key_index).str);
             } break;
 
-            case PLATFORM_EVENT_MOUSE_RELEASE: {
+            case Platform_Event_Type_Mouse_Release: {
                 platform_log("%s released!\n", get_key_name(event->key_index).str);
             } break;
 
-            case PLATFORM_EVENT_MOUSE_MOVE: {
+            case Platform_Event_Type_Mouse_Move: {
                 app_data->mouse_pos = event->mouse_pos;
             } break;
 
-            case PLATFORM_EVENT_CURSOR_ENTER: {
+            case Platform_Event_Type_Cursor_Enter: {
                 platform_log("cursor enter\n");
             } break;
 
-            case PLATFORM_EVENT_CURSOR_LEAVE: {
+            case Platform_Event_Type_Cursor_Leave: {
                 platform_log("cursor leave\n");
             } break;
         }
@@ -60,6 +63,12 @@ void app_init() {
     }
 
     platform_state->events = PushData(app_data->arena, Platform_Event, PLATFORM_MAX_EVENTS);
+
+    Mem_Arena *arena = app_data->arena;
+
+    String a = str_push(arena, "Hello, ");
+    String b = str_push(arena, "World!");
+    String c = str_concat(arena, a, b);
 
     load_gl_functions();
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

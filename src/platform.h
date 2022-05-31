@@ -1,35 +1,50 @@
+/* platform.h - v0.1 - Sven A. Schreiber
+ *
+ * platform.h is a single header file operating system
+ * abstraction. It offers a platform independent interface
+ * for OS functionallity, such as loading a file, handling
+ * window/input events,...
+ * 
+ * To use this file simply define PLATFORM_IMPL once at the start of
+ * your project before including it. After that you can include it 
+ * without defining PLATFORM_IMPL as per usual.
+ * 
+ * Example:
+ * ...
+ * #define PLATFORM_IMPL
+ * #include "platform.h"
+ * ...
+ */
+
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-// =============================
-// >> GENERAL
+// +============+
+// | DEFINTIONS |
+// +============+
 
 #define PLATFORM_DEFAULT_WINDOW_WIDTH  1280
 #define PLATFORM_DEFAULT_WINDOW_HEIGHT 720
 
 
-// =============================
-// >> PLATFORM EVENTS
+#define PLATFORM_MAX_EVENTS 1024
 
-#define PLATFORM_MAX_EVENTS            1024
-
-#define PLATFORM_EVENT_NONE            0x00
-#define PLATFORM_EVENT_KEY_PRESS       0x01
-#define PLATFORM_EVENT_KEY_RELEASE     0x02
-#define PLATFORM_EVENT_CHARACTER_INPUT 0x03
-#define PLATFORM_EVENT_MOUSE_PRESS     0x04
-#define PLATFORM_EVENT_MOUSE_RELEASE   0x05
-#define PLATFORM_EVENT_MOUSE_MOVE      0x06
-#define PLATFORM_EVENT_MOUSE_SCROLL    0x07
-#define PLATFORM_EVENT_CURSOR_LEAVE    0x08
-#define PLATFORM_EVENT_CURSOR_ENTER    0x09
-
-// =============================
-// >> PLATFORM STRUCTS
+typedef enum Platform_Event_Type {
+    Platform_Event_Type_None,
+    Platform_Event_Type_Key_Press,
+    Platform_Event_Type_Key_Release,
+    Platform_Event_Type_Character_Input,
+    Platform_Event_Type_Mouse_Press,
+    Platform_Event_Type_Mouse_Release,
+    Platform_Event_Type_Mouse_Move,
+    Platform_Event_Type_Mouse_Scroll,
+    Platform_Event_Type_Cursor_Leave,
+    Platform_Event_Type_Cursor_Enter
+} Platform_Event_Type;
 
 typedef struct Platform_Event Platform_Event;
 struct Platform_Event {
-    s32 type;
+    Platform_Event_Type type;
     s32 key_index;
     s32 key_modifiers;
     u32 character;
@@ -53,36 +68,38 @@ struct Platform_State {
     Platform_Event *events;
 };
 
+
+// +===========+
+// | INTERFACE |
+// +===========+
+
 static Platform_State *platform_state = 0;
 
-
-// =============================
-// >> PLATFORM PROCEDURES
-
-// > Platform Specific
 void platform_log(char *format, ...);
 b32 platform_read_entire_file(char *file_name, Platform_File *result);
-void * platform_reserve_memory(u64 size);
+void *platform_reserve_memory(u64 size);
 void platform_commit_memory(void *mem, u64 size);
 void platform_release_memory(void *mem);
 void platform_decommit(void *mem, u64 size);
 void platform_swap_buffers();
-// void* platform_get_gl_proc_address(char *function_name); already declared in opengl.h, but has to be implemented aswell.
+// void* platform_get_gl_proc_address(char *function_name); already declared in opengl.h, but has to be implemented aswell. Just listed here for sake of completeness.
 
-// > Application Specific
 void platform_push_event(Platform_Event event);
 
 
-// =============================
-// >> IMPLEMENTATION
+// +================+
+// | IMPLEMENTATION |
+// +================+
 
-#ifdef PLATFORM_IMPLEMENTATION
+#ifdef PLATFORM_IMPL
+
 void platform_push_event(Platform_Event event) {
     if (platform_state->event_count < PLATFORM_MAX_EVENTS) {
         platform_state->events[platform_state->event_count] = event;
         platform_state->event_count += 1;
     }
 }
+
 #endif
 
 #endif

@@ -108,7 +108,7 @@ LRESULT CALLBACK win32_window_proc(HWND window, UINT message, WPARAM wparam, LPA
                 case WM_LBUTTONDOWN: {
             Platform_Event event = {0};
             {
-                event.type          = PLATFORM_EVENT_MOUSE_PRESS;
+                event.type          = Platform_Event_Type_Mouse_Press;
                 event.key_index     = KEY_MOUSE_BUTTON_LEFT;
                 event.key_modifiers = key_modifiers;
             }
@@ -118,7 +118,7 @@ LRESULT CALLBACK win32_window_proc(HWND window, UINT message, WPARAM wparam, LPA
         case WM_LBUTTONUP: {
             Platform_Event event = {0};
             {
-                event.type          = PLATFORM_EVENT_MOUSE_RELEASE;
+                event.type          = Platform_Event_Type_Mouse_Release;
                 event.key_index     = KEY_MOUSE_BUTTON_LEFT;
                 event.key_modifiers = key_modifiers;
             }
@@ -128,7 +128,7 @@ LRESULT CALLBACK win32_window_proc(HWND window, UINT message, WPARAM wparam, LPA
         case WM_RBUTTONDOWN: {
             Platform_Event event = {0};
             {
-                event.type          = PLATFORM_EVENT_MOUSE_PRESS;
+                event.type          = Platform_Event_Type_Mouse_Press;
                 event.key_index     = KEY_MOUSE_BUTTON_RIGHT;
                 event.key_modifiers = key_modifiers;
             }
@@ -138,7 +138,7 @@ LRESULT CALLBACK win32_window_proc(HWND window, UINT message, WPARAM wparam, LPA
         case WM_RBUTTONUP: {
             Platform_Event event = {0};
             {
-                event.type          = PLATFORM_EVENT_MOUSE_RELEASE;
+                event.type          = Platform_Event_Type_Mouse_Release;
                 event.key_index     = KEY_MOUSE_BUTTON_RIGHT;
                 event.key_modifiers = key_modifiers;
             }
@@ -148,7 +148,7 @@ LRESULT CALLBACK win32_window_proc(HWND window, UINT message, WPARAM wparam, LPA
         case WM_MOUSEMOVE: {
             Platform_Event event = {0};
             {
-                event.type          = PLATFORM_EVENT_MOUSE_MOVE;
+                event.type          = Platform_Event_Type_Mouse_Move;
                 event.mouse_pos     = win32_get_mouse_pos(window);
             }
             platform_push_event(event);
@@ -165,7 +165,7 @@ LRESULT CALLBACK win32_window_proc(HWND window, UINT message, WPARAM wparam, LPA
                 TrackMouseEvent(&track_mouse_event);
                 Platform_Event cursor_enter_event = {0};
                 {
-                    cursor_enter_event.type = PLATFORM_EVENT_CURSOR_ENTER;
+                    cursor_enter_event.type = Platform_Event_Type_Cursor_Enter;
                 }
                 platform_push_event(cursor_enter_event);
             }
@@ -175,7 +175,7 @@ LRESULT CALLBACK win32_window_proc(HWND window, UINT message, WPARAM wparam, LPA
             tracking_mouse = 0;
             Platform_Event event = {0};
             {
-                event.type = PLATFORM_EVENT_CURSOR_LEAVE;
+                event.type = Platform_Event_Type_Cursor_Leave;
             }
             platform_push_event(event);
         } break;
@@ -184,7 +184,7 @@ LRESULT CALLBACK win32_window_proc(HWND window, UINT message, WPARAM wparam, LPA
             s32 scroll_delta = (s32)GET_WHEEL_DELTA_WPARAM(wparam);
             Platform_Event event = {0};
             {
-                event.type          = PLATFORM_EVENT_MOUSE_SCROLL;
+                event.type          = Platform_Event_Type_Mouse_Scroll;
                 event.scroll_delta  = scroll_delta;
             }
             platform_push_event(event);
@@ -278,7 +278,7 @@ LRESULT CALLBACK win32_window_proc(HWND window, UINT message, WPARAM wparam, LPA
             if (is_down) {
                 Platform_Event event = {0};
                 {
-                    event.type          = PLATFORM_EVENT_KEY_PRESS;
+                    event.type          = Platform_Event_Type_Key_Press;
                     event.key_index     = key_input;
                     event.key_modifiers = key_modifiers;
                 }
@@ -286,7 +286,7 @@ LRESULT CALLBACK win32_window_proc(HWND window, UINT message, WPARAM wparam, LPA
             } else {
                 Platform_Event event = {0};
                 {
-                    event.type          = PLATFORM_EVENT_KEY_RELEASE;
+                    event.type          = Platform_Event_Type_Key_Release;
                     event.key_index     = key_input;
                     event.key_modifiers = key_modifiers;
                 }
@@ -301,7 +301,7 @@ LRESULT CALLBACK win32_window_proc(HWND window, UINT message, WPARAM wparam, LPA
             if (character >= 32) {
                 Platform_Event event = {0};
                 {
-                    event.type          = PLATFORM_EVENT_CHARACTER_INPUT;
+                    event.type          = Platform_Event_Type_Character_Input;
                     event.character     = character;
                     event.key_modifiers = key_modifiers;
                 }
