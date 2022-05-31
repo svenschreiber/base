@@ -42,11 +42,14 @@ typedef enum Platform_Event_Type {
     Platform_Event_Type_Cursor_Enter
 } Platform_Event_Type;
 
+typedef enum Key_Modifiers Key_Modifiers;
+typedef enum Key Key;
+
 typedef struct Platform_Event Platform_Event;
 struct Platform_Event {
     Platform_Event_Type type;
-    s32 key_index;
-    s32 key_modifiers;
+    Key key;
+    Key_Modifiers key_modifiers;
     u32 character;
     ivec2 mouse_pos;
     s32 scroll_delta;
@@ -82,7 +85,7 @@ void platform_commit_memory(void *mem, u64 size);
 void platform_release_memory(void *mem);
 void platform_decommit(void *mem, u64 size);
 void platform_swap_buffers();
-// void* platform_get_gl_proc_address(char *function_name); already declared in opengl.h, but has to be implemented aswell. Just listed here for sake of completeness.
+void *platform_get_gl_proc_address(char *function_name);
 
 void platform_push_event(Platform_Event event);
 

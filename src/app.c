@@ -1,6 +1,6 @@
 #include "base.h"
+#define MATH_IMPL
 #include "math.h"
-#include "math.c"
 #define PLATFORM_IMPL
 #include "platform.h"
 #define MEMORY_IMPL
@@ -19,11 +19,11 @@ static void app_process_events() {
         switch (event->type) {
 
             case Platform_Event_Type_Key_Press: {
-                platform_log("%s pressed!\n", get_key_name(event->key_index).str);
+                platform_log("%s pressed!\n", get_key_name(event->key).str);
             } break;
 
             case Platform_Event_Type_Key_Release: {
-                platform_log("%s released!\n", get_key_name(event->key_index).str);
+                platform_log("%s released!\n", get_key_name(event->key).str);
             } break;
 
             case Platform_Event_Type_Character_Input: {
@@ -31,11 +31,11 @@ static void app_process_events() {
             } break;
 
             case Platform_Event_Type_Mouse_Press: {
-                platform_log("%s pressed!\n", get_key_name(event->key_index).str);
+                platform_log("%s pressed!\n", get_key_name(event->key).str);
             } break;
 
             case Platform_Event_Type_Mouse_Release: {
-                platform_log("%s released!\n", get_key_name(event->key_index).str);
+                platform_log("%s released!\n", get_key_name(event->key).str);
             } break;
 
             case Platform_Event_Type_Mouse_Move: {

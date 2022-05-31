@@ -17,7 +17,8 @@
 #ifndef STRING_H
 #define STRING_H
 
-#include <stdarg.h>
+// For va_start, etc.
+#include <stdarg.h> 
 
 // +============+
 // | DEFINTIONS |

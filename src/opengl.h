@@ -36,8 +36,6 @@ GLProc(glTexImage3D, GLTEXIMAGE3D) \
 GLProc(glActiveTexture, GLACTIVETEXTURE) \
 GLProc(glGenerateMipmap, GLGENERATEMIPMAP)
 
-void* platform_get_gl_proc_address(char *function_name);
-
 #ifdef _WIN32
 #include <windows.h>
 #include <gl/gl.h>
