@@ -69,6 +69,8 @@ void app_init() {
     String a = str_push(arena, "Hello, ");
     String b = str_push(arena, "World!");
     String c = str_concat(arena, a, b);
+    String d = str_substring(arena, a, 1, 4);
+    String_List list = str_split(arena, c, ',');
 
     load_gl_functions();
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
