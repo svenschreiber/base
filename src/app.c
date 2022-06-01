@@ -71,7 +71,7 @@ void app_init() {
     String a = str_push(arena, "Hello, ");
     String b = str_push(arena, "World!");
     String c = str_concat(arena, a, b);
-    String d = str_substring(arena, a, 1, 4);
+    String d = str_substring(a, 1, 4);
     String_List list = str_split(arena, c, ',');
     b32 b1 = str_equal(a, b);
     b32 b2 = str_equal(a, a);

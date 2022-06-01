@@ -27,8 +27,8 @@ String get_key_name(s32 index) {
     }
 
     String result;
-    result.str = string;
-    result.size = (s32) strlen(string);
+    result.str = (u8 *)string;
+    result.size = strlen(string);
 
     return result;
 }

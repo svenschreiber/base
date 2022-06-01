@@ -26,7 +26,7 @@
 
 typedef struct String String;
 struct String {
-    char *str;
+    u8 *str;
     u64 size;
 };
 
@@ -51,14 +51,17 @@ struct String_List {
 String str_push(Mem_Arena *arena, char *str);
 String str_pushf(Mem_Arena *arena, char *format, ...);
 String str_copy(Mem_Arena *arena, String string);
+String str_substring(String str, u64 from, u64 to);
+char *str_null_termintate(Mem_Arena *arena, String str);
 String str_concat(Mem_Arena *arena, String a, String b);
-String str_substring(Mem_Arena *arena, String str, u64 from, u64 to);
-char *str_get_cstr(Mem_Arena *arena, String str);
 String_List str_split(Mem_Arena *arena, String str, char c);
 b32 str_equal(String a, String b);
 
 void str_list_push_node(String_List *list, String_List_Node *node);
 void str_list_push(Mem_Arena *arena, String_List *list, String str);
+// TODO:
+// str_list_concat()
+// str_list_join()
 
 
 // +================+
@@ -70,7 +73,7 @@ void str_list_push(Mem_Arena *arena, String_List *list, String str);
 String str_push(Mem_Arena *arena, char *str) {
     u64 len = strlen(str);
     String result = {0};
-    result.str = PushData(arena, char, len);
+    result.str = PushData(arena, u8, len);
     result.size = len;
     memmove(result.str, str, len);
     return result;
@@ -88,7 +91,7 @@ String str_pushf(Mem_Arena *arena, char *format, ...) {
 
 String str_copy(Mem_Arena *arena, String str) {
     String result = {0};
-    result.str = PushData(arena, char, str.size);
+    result.str = PushData(arena, u8, str.size);
     result.size = str.size;
     memmove(result.str, str.str, str.size);
     return result;
@@ -97,29 +100,28 @@ String str_copy(Mem_Arena *arena, String str) {
 String str_concat(Mem_Arena *arena, String a, String b) {
     String result = {0};
     u64 size = a.size + b.size;
-    result.str = PushData(arena, char, size);
+    result.str = PushData(arena, u8, size);
     result.size = size;
     memmove(result.str, a.str, a.size);
     memmove(result.str + a.size, b.str, b.size);
     return result;
 }
 
-
-// TODO: See if we really need to allocate a new string for every substring
-// or if we could just use the memory of the original string.
-//
-// from: inclusive, to: exclusive
-String str_substring(Mem_Arena *arena, String str, u64 from, u64 to) {
+String str_substring(String str, u64 from, u64 to) {
     String result = {0};
-    Assert(to <= str.size);
-    u64 size = to - from;
-    result.str = PushData(arena, char, size);
-    result.size = size;
-    memmove(result.str, str.str + from, size);
+    if (from > str.size) from = str.size;
+    if (to > str.size) to = str.size;
+    if (from > to) {
+        u64 tmp = from;
+        from = to;
+        to = tmp;
+    }
+    str.str += from;
+    str.size = to - from;
     return result;
 }
 
-char *str_get_cstr(Mem_Arena *arena, String str) {
+char *str_null_terminate(Mem_Arena *arena, String str) {
     if ((str.size > 0) && (str.str[str.size - 1] != '\0')) {
         return (char *)str_concat(arena, str, str_push(arena, "\0")).str;
     }
@@ -131,11 +133,11 @@ String_List str_split(Mem_Arena *arena, String str, char c) {
     u64 start = 0;
     for (u64 i = 0; i < str.size; ++i) {
         if (str.str[i] == c) {
-            str_list_push(arena, &result, str_substring(arena, str, start, i));
+            str_list_push(arena, &result, str_substring(str, start, i));
             start = i + 1;
         }
     }
-    str_list_push(arena, &result, str_substring(arena, str, start, str.size));
+    str_list_push(arena, &result, str_substring(str, start, str.size));
     return result;
 }
 
