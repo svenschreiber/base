@@ -56,15 +56,17 @@ static void app_process_events() {
 
 void app_init() {
     {
-        Mem_Arena temp = mem_arena_init(MB(32));
+        Mem_Arena temp = mem_arena_init(GB(4));
         app_data = PushStruct(&temp, App_Data);
         app_data->arena = PushStruct(&temp, Mem_Arena);
         *app_data->arena = temp;
     }
-
-    platform_state->events = PushData(app_data->arena, Platform_Event, PLATFORM_MAX_EVENTS);
-
     Mem_Arena *arena = app_data->arena;
+
+    app_data->frame_arena = PushStruct(arena, Mem_Arena);
+    *app_data->frame_arena = mem_arena_init(GB(1));
+
+    platform_state->events = PushData(arena, Platform_Event, PLATFORM_MAX_EVENTS);
 
     String a = str_push(arena, "Hello, ");
     String b = str_push(arena, "World!");
@@ -77,6 +79,8 @@ void app_init() {
 }
 
 void app_update() {
+    mem_arena_clear(app_data->frame_arena);
+
     app_process_events();
 
     glClear(GL_COLOR_BUFFER_BIT);
