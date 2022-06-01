@@ -53,7 +53,9 @@ String str_pushf(Mem_Arena *arena, char *format, ...);
 String str_copy(Mem_Arena *arena, String string);
 String str_concat(Mem_Arena *arena, String a, String b);
 String str_substring(Mem_Arena *arena, String str, u64 from, u64 to);
+char *str_get_cstr(Mem_Arena *arena, String str);
 String_List str_split(Mem_Arena *arena, String str, char c);
+b32 str_equal(String a, String b);
 
 void str_list_push_node(String_List *list, String_List_Node *node);
 void str_list_push(Mem_Arena *arena, String_List *list, String str);
@@ -103,6 +105,9 @@ String str_concat(Mem_Arena *arena, String a, String b) {
 }
 
 
+// TODO: See if we really need to allocate a new string for every substring
+// or if we could just use the memory of the original string.
+//
 // from: inclusive, to: exclusive
 String str_substring(Mem_Arena *arena, String str, u64 from, u64 to) {
     String result = {0};
@@ -112,6 +117,13 @@ String str_substring(Mem_Arena *arena, String str, u64 from, u64 to) {
     result.size = size;
     memmove(result.str, str.str + from, size);
     return result;
+}
+
+char *str_get_cstr(Mem_Arena *arena, String str) {
+    if ((str.size > 0) && (str.str[str.size - 1] != '\0')) {
+        return (char *)str_concat(arena, str, str_push(arena, "\0")).str;
+    }
+    return (char *)str.str;
 }
 
 String_List str_split(Mem_Arena *arena, String str, char c) {
@@ -125,6 +137,16 @@ String_List str_split(Mem_Arena *arena, String str, char c) {
     }
     str_list_push(arena, &result, str_substring(arena, str, start, str.size));
     return result;
+}
+
+b32 str_equal(String a, String b) {
+    if (a.size != b.size) return 0;
+    for (u64 i = 0; i < a.size; ++i) {
+        if (a.str[i] != b.str[i]) {
+            return 0;
+        }
+    }
+    return 1;
 }
 
 void str_list_push_node(String_List *list, String_List_Node *node) {
