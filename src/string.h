@@ -41,6 +41,7 @@ struct String_List {
     String_List_Node *first;
     String_List_Node *last;
     u64 num_nodes;
+    u64 combined_size;
 };
 
 
@@ -48,6 +49,7 @@ struct String_List {
 // | INTERFACE |
 // +===========+
 
+String str_lit(char *str);
 String str_push(Mem_Arena *arena, char *str);
 String str_pushf(Mem_Arena *arena, char *format, ...);
 String str_copy(Mem_Arena *arena, String string);
@@ -59,9 +61,15 @@ b32 str_equal(String a, String b);
 
 void str_list_push_node(String_List *list, String_List_Node *node);
 void str_list_push(Mem_Arena *arena, String_List *list, String str);
-// TODO:
-// str_list_concat()
-// str_list_join()
+void str_list_concat(String_List *list, String_List *appendix);
+String str_list_join(Mem_Arena *arena, String_List *list, String seperator);
+
+
+// +===============+
+// | HELPER MACROS |
+// +===============+
+
+#define Str(x) str_lit(x)
 
 
 // +================+
@@ -69,6 +77,13 @@ void str_list_push(Mem_Arena *arena, String_List *list, String str);
 // +================+
 
 #ifdef STRING_IMPL
+
+String str_lit(char *str) {
+    String result = {0};
+    result.str = (u8*)str;
+    result.size = strlen(str);
+    return result;
+}
 
 String str_push(Mem_Arena *arena, char *str) {
     u64 len = strlen(str);
@@ -116,8 +131,8 @@ String str_substring(String str, u64 from, u64 to) {
         from = to;
         to = tmp;
     }
-    str.str += from;
-    str.size = to - from;
+    result.str = str.str + from;
+    result.size = to - from;
     return result;
 }
 
@@ -154,12 +169,42 @@ b32 str_equal(String a, String b) {
 void str_list_push_node(String_List *list, String_List_Node *node) {
     Queue_PushBack(list, node);
     list->num_nodes += 1;
+    list->combined_size += node->string.size;
 }
 
 void str_list_push(Mem_Arena *arena, String_List *list, String str) {
     String_List_Node *node = PushStructZero(arena, String_List_Node);
     node->string = str;
     str_list_push_node(list, node);
+}
+
+void str_list_concat(String_List *list, String_List *appendix) {
+    if (list->num_nodes == 0) {
+        *list = *appendix;
+    } else {
+        list->num_nodes += appendix->num_nodes;
+        list->last->next = appendix->first;
+        list->last = appendix->last;
+    }
+}
+
+String str_list_join(Mem_Arena *arena, String_List *list, String seperator) {
+    String result = {0};
+    if (list->num_nodes > 0) {
+        u64 size = (list->num_nodes - 1) * seperator.size + list->combined_size;
+        result.str = PushData(arena, u8, size);
+        result.size = size;
+        
+        u8 *data = result.str;
+        for (String_List_Node *n = list->first; n != list->last; n = n->next) {
+            memmove(data, n->string.str, n->string.size);
+            data += n->string.size;
+            memmove(data, seperator.str, seperator.size);
+            data += seperator.size;
+        }
+        memmove(data, list->last->string.str, list->last->string.size);
+    }
+    return result;
 }
 
 #endif

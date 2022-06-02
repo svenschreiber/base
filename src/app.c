@@ -68,13 +68,17 @@ void app_init() {
 
     platform_state->events = PushData(arena, Platform_Event, PLATFORM_MAX_EVENTS);
 
-    String a = str_push(arena, "Hello, ");
-    String b = str_push(arena, "World!");
+    String a = Str("Hello, ");
+    String b = Str("World!");
     String c = str_concat(arena, a, b);
     String d = str_substring(a, 1, 4);
     String_List list = str_split(arena, c, ',');
     b32 b1 = str_equal(a, b);
     b32 b2 = str_equal(a, a);
+    String_List list2 = str_split(arena, Str("a,b,c,d,efg,"), ',');
+    String sep = Str("#");
+    String j = str_list_join(arena, &list2, sep);
+    
     load_gl_functions();
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 }
