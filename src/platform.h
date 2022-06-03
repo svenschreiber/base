@@ -29,7 +29,8 @@
 
 #define PLATFORM_MAX_EVENTS 1024
 
-typedef enum Platform_Event_Type {
+typedef enum Platform_Event_Type Platform_Event_Type;
+enum Platform_Event_Type {
     Platform_Event_Type_None,
     Platform_Event_Type_Key_Press,
     Platform_Event_Type_Key_Release,
@@ -40,7 +41,7 @@ typedef enum Platform_Event_Type {
     Platform_Event_Type_Mouse_Scroll,
     Platform_Event_Type_Cursor_Leave,
     Platform_Event_Type_Cursor_Enter
-} Platform_Event_Type;
+};
 
 typedef enum Key_Modifiers Key_Modifiers;
 typedef enum Key Key;
