@@ -39,11 +39,17 @@ typedef double f64;
 
 #define Assert(expression) if(!(expression)) { *(int *)0 = 0; }
 
+#define Stack_Push(s, n) ((s)->first ? ((n)->next = (s)->first, (s)->first = (n)) : \
+                          ((s)->first = (n)))
+#define Stack_Pop(s) ((s)->first ? (s)->first = (s)->first->next : (s)->first)
+
 #define Queue_PushBack(q, n) (((q)->last ? (q)->last->next = (n) : \
                                ((q)->last = (n), (q)->first = (n))),\
                               (q)->last = (n))
-#define Queue_PopFront(q) ((q)->first ? (q)->first = (q)->first->next : (q)->first)
-#define DLL_PushBack(dll, n) (((dll)->last ? ((n)->prev = (dll)->last, (dll)->last->next = (n)) : \
+#define Queue_PopFront(q) Stack_Pop(q)
+
+#define DLL_PushBack(dll, n) (((dll)->last ?                            \
+                               ((n)->prev = (dll)->last, (dll)->last->next = (n)) : \
                                ((dll)->first = (n))), ((dll)->last = (n)))
 
 #endif
