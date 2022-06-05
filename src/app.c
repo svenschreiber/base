@@ -9,6 +9,8 @@
 #include "string.h"
 #include "key_input.h"
 #include "opengl.h"
+#define UI_IMPL
+#include "ui.h"
 #include "app.h"
 
 static App_Data *app_data = 0;

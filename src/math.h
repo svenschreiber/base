@@ -148,6 +148,8 @@ mat4 m4_rotate(mat4 a, vec3 axis, f32 theta);
 // | HELPER MACROS |
 // +===============+
 
+#define Clamp(a, x, b) (((a)>(x))?(a):((b)<(x))?(b):(x))
+
 #define vec2(...) (vec2){ __VA_ARGS__ }
 #define vec3(...) (vec3){ __VA_ARGS__ }
 #define vec4(...) (vec4){ __VA_ARGS__ }
