@@ -1,15 +1,15 @@
 #ifndef BASE_H
 #define BASE_H
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
 
-// =============================
-// >> STANDARD TYPE SIZE
-
-#include <stdint.h>
+// +============+
+// | DEFINTIONS |
+// +============+
 
 typedef int8_t s8;
 typedef int16_t s16;
@@ -27,8 +27,9 @@ typedef float f32;
 typedef double f64;
 
 
-// =============================
-// >> USEFUL MACROS
+// +===============+
+// | HELPER MACROS |
+// +===============+
 
 #define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
 
