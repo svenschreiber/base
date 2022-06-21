@@ -56,8 +56,9 @@ String str_copy(Mem_Arena *arena, String string);
 String str_substring(String str, u64 from, u64 to);
 char *str_null_termintate(Mem_Arena *arena, String str);
 String str_concat(Mem_Arena *arena, String a, String b);
-String_List str_split(Mem_Arena *arena, String str, char c);
+String_List str_split(Mem_Arena *arena, String str, String sep);
 b32 str_equal(String a, String b);
+b32 str_has_prefix(String str, String prefix);
 
 void str_list_push_node(String_List *list, String_List_Node *node);
 void str_list_push(Mem_Arena *arena, String_List *list, String str);
@@ -143,14 +144,29 @@ char *str_null_terminate(Mem_Arena *arena, String str) {
     return (char *)str.str;
 }
 
-String_List str_split(Mem_Arena *arena, String str, char c) {
+b32 str_has_prefix(String str, String prefix) {
+    if (str.size < prefix.size) return 0;
+    for (u64 i = 0; i < prefix.size; ++i) {
+        if (str.str[i] != prefix.str[i]) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+String_List str_split(Mem_Arena *arena, String str, String sep) {
+    Assert(sep.size > 0);
     String_List result = {0};
     u64 start = 0;
+    String current = str;
     for (u64 i = 0; i < str.size; ++i) {
-        if (str.str[i] == c) {
+        if (str_has_prefix(current, sep)) {
             str_list_push(arena, &result, str_substring(str, start, i));
-            start = i + 1;
+            start = i + sep.size;
+            i += sep.size - 1;
+            current = str_substring(current, sep.size - 1, current.size);
         }
+        current = str_substring(current, 1, current.size);
     }
     str_list_push(arena, &result, str_substring(str, start, str.size));
     return result;
