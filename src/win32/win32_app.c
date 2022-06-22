@@ -96,6 +96,9 @@ LRESULT CALLBACK win32_window_proc(HWND window, UINT message, WPARAM wparam, LPA
             platform_state->window_width  = LOWORD(lparam);
             platform_state->window_height = HIWORD(lparam);
             glViewport(0, 0, platform_state->window_width, platform_state->window_height);
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(0.0f, (f32)platform_state->window_width, (f32)platform_state->window_height, 0.0f, 0.0f, 1.0f);
             if (app_data) {
                 app_update();
             }

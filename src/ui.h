@@ -100,16 +100,32 @@ struct UI_Box {
     String text;
     UI_Box_Style style;
 
+    UI_Key key;
+    UI_Box *hash_next;
+    UI_Box *hash_prev;
+    u64 frame_created;
+
     UI_Rect rect;
+};
+
+// TODO: move this in its own file
+#define HASH_TABLE_MAX 2048
+
+typedef struct UI_Hash_Table UI_Hash_Table;
+struct UI_Hash_Table {
+    UI_Box *entries[HASH_TABLE_MAX];
+    u32 capacity;
 };
 
 typedef struct UI_State UI_State;
 struct UI_State {
     Mem_Arena arena;
-    Mem_Arena frame_arena;
+    Mem_Arena frame_arena[2];
     
     UI_Box *root;
     UI_Box *current_parent;
+    UI_Hash_Table hash_table;
+    u64 current_frame;
 };
 
 
@@ -136,6 +152,8 @@ void ui_layout_downwards_dependent(UI_Box *box, UI_Axis axis);
 void ui_layout_enforce_constraints(UI_Box *box, UI_Axis axis);
 void ui_layout_position(UI_Box *box, UI_Axis axis);
 UI_Key ui_key_from_string(Mem_Arena *arena, String str);
+void ui_hash_table_put(UI_Hash_Table *table, UI_Box *box);
+Mem_Arena *ui_frame_arena();
 
 // +================+
 // | IMPLEMENTATION |
@@ -216,6 +234,39 @@ UI_Key ui_key_from_string(Mem_Arena *arena, String str) {
     return result;
 }
 
+void ui_hash_table_put(UI_Hash_Table *table, UI_Box *box) {
+    UI_Key key = box->key;
+    u32 index = key.hash % table->capacity;
+    if (table->entries[index] == 0) {
+        table->entries[index] = box;
+    } else {
+        UI_Box *entry = table->entries[index];
+        while (entry->hash_next) {
+            entry = entry->hash_next;
+        }
+        entry->hash_next = box;
+        box->hash_prev = entry;
+    }
+}
+
+void ui_hash_table_remove(UI_Hash_Table *table, UI_Box *box) {
+    UI_Key key = box->key;
+    u32 index = key.hash % table->capacity;
+    if (!box->hash_prev) {
+        table->entries[index] = box->hash_next;
+    } else {
+        UI_Box *prev = box->hash_prev;
+        prev->hash_next = box->hash_next;
+        box->hash_prev = 0;
+    }
+
+    if (box->hash_next) {
+        UI_Box *next = box->hash_next;
+        next->hash_prev = box->hash_prev;
+        box->hash_next = 0;
+    }
+}
+
 void ui_push_parent(UI_Box *box) {
     global_ui_state->current_parent = box;
 }
@@ -228,21 +279,42 @@ void ui_pop_parent() {
 void ui_begin(UI_State *state, Platform_State *p_state) {
     global_ui_state = state;
 
-    mem_arena_clear(&global_ui_state->frame_arena);
-    UI_Box *root = PushStructZero(&global_ui_state->frame_arena, UI_Box);
+    mem_arena_clear(ui_frame_arena());
+    UI_Box *root = PushStructZero(ui_frame_arena(), UI_Box);
     root->fixed_size.data[UI_Axis_X] = (f32)platform_state->window_width;
     root->fixed_size.data[UI_Axis_Y] = (f32)platform_state->window_height;
     root->flags |= UI_Box_Flag_Fixed_Width;
     root->flags |= UI_Box_Flag_Fixed_Height;
     root->child_layout_axis = UI_Axis_X;
-    //root->text = push_string(&global_ui_state->frame_arena, "R");
+    root->text = str_pushf(ui_frame_arena(), "###%p", root);
     global_ui_state->root = root;
     global_ui_state->current_parent = root;
 }
 
+
+void hash_table_print(UI_Hash_Table *table) {
+    for (u32 i = 0; i < table->capacity; ++i) {
+        platform_log("%02u ", i);
+        UI_Box *node = table->entries[i];
+        while (node) {
+            platform_log("| 0x%p ", node);
+            node = node->hash_next;
+        }
+        platform_log("\n");
+    }
+}
+
 void ui_end() {
-    // setup hash table
-    // ...
+    UI_State *state = global_ui_state;
+    UI_Hash_Table *hash_table = &state->hash_table;
+
+    for (u32 i = 0; i < hash_table->capacity; ++i) {
+        for (UI_Box *box = hash_table->entries[i]; box; box = box->hash_next) {
+            if (box->frame_created < state->current_frame) {
+                ui_hash_table_remove(hash_table, box);
+            }
+        }
+    }
 
     for(UI_Axis axis = (UI_Axis)0; axis < UI_Axis_Count; axis = (UI_Axis)(axis + 1)) {
         ui_layout_independent_sizes(global_ui_state->root, axis);
@@ -251,6 +323,8 @@ void ui_end() {
         ui_layout_enforce_constraints(global_ui_state->root, axis);
         ui_layout_position(global_ui_state->root, axis);
     }
+
+    global_ui_state->current_frame += 1;
 }
 
 UI_Size ui_pixel_size(f32 pixels) {
@@ -265,24 +339,34 @@ UI_Size ui_children_sum_size() {
     return (UI_Size){UI_Size_Kind_Children_Sum, 1.0f, 0.0f};
 }
 
+Mem_Arena *ui_frame_arena() {
+    return &global_ui_state->frame_arena[global_ui_state->current_frame % 2];
+}
+
 UI_State *ui_state_make() {
     Mem_Arena arena = mem_arena_init(GB(64));
     UI_State *state = PushStruct(&arena, UI_State);
     state->arena = arena;
-    state->frame_arena = mem_arena_init(GB(1));
+    state->frame_arena[0] = mem_arena_init(GB(1));
+    state->frame_arena[1] = mem_arena_init(GB(1));
+    state->hash_table.capacity = HASH_TABLE_MAX;
+    state->current_frame = 0;
 
     return state;
 }
 
 UI_Box *ui_box_make(UI_Box_Flags flags, String text) {
     UI_Box *parent = global_ui_state->current_parent;
-    Mem_Arena *frame_arena = &global_ui_state->frame_arena;
-    UI_Box *box = PushStructZero(&global_ui_state->frame_arena, UI_Box);
+    UI_Box *box = PushStructZero(ui_frame_arena(), UI_Box);
 
     box->parent = parent;
     box->flags = flags;
-    box->text = str_copy(frame_arena, text);
-    
+    box->text = str_copy(ui_frame_arena(), text);
+
+    box->key = ui_key_from_string(ui_frame_arena(), box->text);
+    box->frame_created = global_ui_state->current_frame;
+    ui_hash_table_put(&global_ui_state->hash_table, box);
+
     DLL_PushBack(parent, box);
     return box;
 }
@@ -389,7 +473,7 @@ void ui_layout_enforce_constraints(UI_Box *box, UI_Axis axis) {
         f32 overflow = total_size - total_allowed_size;
         if (overflow > 0) {
             f32 child_fixup_sum = 0;
-            f32 *child_fixups = PushDataZero(&global_ui_state->frame_arena, f32, ui_count_childs(box));
+            f32 *child_fixups = PushDataZero(ui_frame_arena(), f32, ui_count_childs(box));
             {
                 u64 child_index = 0;
                 for (UI_Box *child = box->first; child; child = child->next, ++child_index) {
