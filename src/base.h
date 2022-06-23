@@ -40,17 +40,42 @@ typedef double f64;
 
 #define Assert(expression) if(!(expression)) { *(int *)0 = 0; }
 
-#define Stack_Push(s, n) ((s)->first ? ((n)->next = (s)->first, (s)->first = (n)) : \
-                          ((s)->first = (n)))
-#define Stack_Pop(s) ((s)->first ? (s)->first = (s)->first->next : (s)->first)
 
-#define Queue_PushBack(q, n) (((q)->last ? (q)->last->next = (n) : \
+
+/////////////////////////////
+// Stack
+#define Custom_Stack_Push(s, n, first, next) ((s)->first ? ((n)->next = (s)->first, \
+                                                            (s)->first = (n)) : \
+                                              ((s)->first = (n)))
+#define Stack_Push(s, n) Custom_Stack_Push(s, n, first, next)
+#define Custom_Stack_Pop(s, first, next) ((s)->first ? (s)->first = (s)->first->next : (s)->first)
+#define Stack_Pop(s) Custom_Stack_Pop(s, first, next)
+
+
+
+/////////////////////////////
+// Queue
+#define Custom_Queue_PushBack(q, n, first, last, next) (((q)->last ? (q)->last->next = (n) : \
                                ((q)->last = (n), (q)->first = (n))),\
                               (q)->last = (n))
-#define Queue_PopFront(q) Stack_Pop(q)
 
-#define DLL_PushBack(dll, n) (((dll)->last ?                            \
+#define Queue_PushBack(q, n) Custom_Queue_PushBack(q, n, first, last, next)
+#define Custom_Queue_PopFront(q, first, next) Custom_Stack_Pop(q, first, next)
+#define Queue_PopFront(q) Custom_Queue_PopFront(q, first, next)
+
+
+/////////////////////////////
+// Doubly-linked-list
+#define Custom_DLL_PushBack(dll, n, first, last, next, prev) (((dll)->last ? \
                                ((n)->prev = (dll)->last, (dll)->last->next = (n)) : \
                                ((dll)->first = (n))), ((dll)->last = (n)))
 
+#define DLL_PushBack(dll, n) Custom_DLL_PushBack(dll, n, first, last, next, prev)
+#define Custom_DLL_Remove(dll, n, first, last, next, prev) (((dll)->first == (n) ? ((dll)->first = (n)->next, \
+                                                    (dll)->first->prev = 0) : \
+                             ((n)->prev->next = (n)->next)), \
+                            ((dll)->last == (n) ? ((dll)->last = (n)->prev, \
+                                                   (dll)->last->next = 0) : \
+                             ((n)->next->prev = (n)->prev)))
+#define DLL_Remove(dll, n) Custom_DLL_Remove(dll, n, first, last, next, prev)
 #endif
