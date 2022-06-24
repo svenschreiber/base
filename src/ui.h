@@ -153,6 +153,7 @@ void ui_layout_enforce_constraints(UI_Box *box, UI_Axis axis);
 void ui_layout_position(UI_Box *box, UI_Axis axis);
 UI_Key ui_key_from_string(Mem_Arena *arena, String str);
 void ui_hash_table_put(UI_Hash_Table *table, UI_Box *box);
+void ui_hash_table_remove(UI_Hash_Table *table, UI_Box *box);
 Mem_Arena *ui_frame_arena();
 
 // +================+
@@ -237,16 +238,7 @@ UI_Key ui_key_from_string(Mem_Arena *arena, String str) {
 void ui_hash_table_put(UI_Hash_Table *table, UI_Box *box) {
     UI_Key key = box->key;
     u32 index = key.hash % table->capacity;
-    if (table->entries[index] == 0) {
-        table->entries[index] = box;
-    } else {
-        UI_Box *entry = table->entries[index];
-        while (entry->hash_next) {
-            entry = entry->hash_next;
-        }
-        entry->hash_next = box;
-        box->hash_prev = entry;
-    }
+    Custom_Stack_Push(table, box, entries[index], hash_next);
 }
 
 void ui_hash_table_remove(UI_Hash_Table *table, UI_Box *box) {
@@ -257,13 +249,11 @@ void ui_hash_table_remove(UI_Hash_Table *table, UI_Box *box) {
     } else {
         UI_Box *prev = box->hash_prev;
         prev->hash_next = box->hash_next;
-        box->hash_prev = 0;
     }
 
     if (box->hash_next) {
         UI_Box *next = box->hash_next;
         next->hash_prev = box->hash_prev;
-        box->hash_next = 0;
     }
 }
 
@@ -289,19 +279,6 @@ void ui_begin(UI_State *state, Platform_State *p_state) {
     root->text = str_pushf(ui_frame_arena(), "###%p", root);
     global_ui_state->root = root;
     global_ui_state->current_parent = root;
-}
-
-
-void hash_table_print(UI_Hash_Table *table) {
-    for (u32 i = 0; i < table->capacity; ++i) {
-        platform_log("%02u ", i);
-        UI_Box *node = table->entries[i];
-        while (node) {
-            platform_log("| 0x%p ", node);
-            node = node->hash_next;
-        }
-        platform_log("\n");
-    }
 }
 
 void ui_end() {
@@ -345,12 +322,11 @@ Mem_Arena *ui_frame_arena() {
 
 UI_State *ui_state_make() {
     Mem_Arena arena = mem_arena_init(GB(64));
-    UI_State *state = PushStruct(&arena, UI_State);
+    UI_State *state = PushStructZero(&arena, UI_State);
     state->arena = arena;
     state->frame_arena[0] = mem_arena_init(GB(1));
     state->frame_arena[1] = mem_arena_init(GB(1));
     state->hash_table.capacity = HASH_TABLE_MAX;
-    state->current_frame = 0;
 
     return state;
 }
