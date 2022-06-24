@@ -111,10 +111,16 @@ struct UI_Box {
 // TODO: move this in its own file
 #define HASH_TABLE_MAX 2048
 
+typedef struct UI_Hash_Table_Bucket UI_Hash_Table_Bucket;
+struct UI_Hash_Table_Bucket {
+    UI_Box *first;
+    UI_Box *last;
+};
+
 typedef struct UI_Hash_Table UI_Hash_Table;
 struct UI_Hash_Table {
-    UI_Box *entries[HASH_TABLE_MAX];
-    u32 capacity;
+    UI_Hash_Table_Bucket buckets[HASH_TABLE_MAX];
+    u32 num_buckets;
 };
 
 typedef struct UI_State UI_State;
@@ -235,26 +241,20 @@ UI_Key ui_key_from_string(Mem_Arena *arena, String str) {
     return result;
 }
 
-void ui_hash_table_put(UI_Hash_Table *table, UI_Box *box) {
+UI_Hash_Table_Bucket *ui_hash_table_bucket_from_box(UI_Hash_Table *table, UI_Box *box) {
     UI_Key key = box->key;
-    u32 index = key.hash % table->capacity;
-    Custom_Stack_Push(table, box, entries[index], hash_next);
+    u32 index = key.hash % table->num_buckets;
+    return &table->buckets[index];
+}
+
+void ui_hash_table_put(UI_Hash_Table *table, UI_Box *box) {
+    UI_Hash_Table_Bucket *bucket = ui_hash_table_bucket_from_box(table, box);
+    Custom_DLL_PushBack(bucket, box, first, last, hash_next, hash_prev);
 }
 
 void ui_hash_table_remove(UI_Hash_Table *table, UI_Box *box) {
-    UI_Key key = box->key;
-    u32 index = key.hash % table->capacity;
-    if (!box->hash_prev) {
-        table->entries[index] = box->hash_next;
-    } else {
-        UI_Box *prev = box->hash_prev;
-        prev->hash_next = box->hash_next;
-    }
-
-    if (box->hash_next) {
-        UI_Box *next = box->hash_next;
-        next->hash_prev = box->hash_prev;
-    }
+    UI_Hash_Table_Bucket *bucket = ui_hash_table_bucket_from_box(table, box);
+    Custom_DLL_Remove(bucket, box, first, last, hash_next, hash_prev);
 }
 
 void ui_push_parent(UI_Box *box) {
@@ -285,8 +285,9 @@ void ui_end() {
     UI_State *state = global_ui_state;
     UI_Hash_Table *hash_table = &state->hash_table;
 
-    for (u32 i = 0; i < hash_table->capacity; ++i) {
-        for (UI_Box *box = hash_table->entries[i]; box; box = box->hash_next) {
+    for (u32 i = 0; i < hash_table->num_buckets; ++i) {
+        UI_Hash_Table_Bucket *bucket = &hash_table->buckets[i];
+        for (UI_Box *box = bucket->first; box; box = box->hash_next) {
             if (box->frame_created < state->current_frame) {
                 ui_hash_table_remove(hash_table, box);
             }
@@ -326,7 +327,7 @@ UI_State *ui_state_make() {
     state->arena = arena;
     state->frame_arena[0] = mem_arena_init(GB(1));
     state->frame_arena[1] = mem_arena_init(GB(1));
-    state->hash_table.capacity = HASH_TABLE_MAX;
+    state->hash_table.num_buckets = HASH_TABLE_MAX;
 
     return state;
 }

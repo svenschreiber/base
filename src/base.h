@@ -71,11 +71,17 @@ typedef double f64;
                                ((dll)->first = (n))), ((dll)->last = (n)))
 
 #define DLL_PushBack(dll, n) Custom_DLL_PushBack(dll, n, first, last, next, prev)
-#define Custom_DLL_Remove(dll, n, first, last, next, prev) (((dll)->first == (n) ? ((dll)->first = (n)->next, \
-                                                    (dll)->first->prev = 0) : \
-                             ((n)->prev->next = (n)->next)), \
-                            ((dll)->last == (n) ? ((dll)->last = (n)->prev, \
-                                                   (dll)->last->next = 0) : \
-                             ((n)->next->prev = (n)->prev)))
+#define Custom_DLL_Remove(dll, n, first, last, next, prev) (((dll)->first == (n) ? \
+                                                             ((dll)->first = (n)->next, \
+                                                              ((dll)->first != 0 ? \
+                                                               (dll)->first->prev = 0 : \
+                                                               (dll)->first)) : \
+                                                             ((n)->prev->next = (n)->next)), \
+                                                            ((dll)->last == (n) ? \
+                                                             ((dll)->last = (n)->prev, \
+                                                              ((dll)->last != 0 ? \
+                                                               (dll)->last->next = 0 : \
+                                                               (dll)->last)) : \
+                                                             ((n)->next->prev = (n)->prev)))
 #define DLL_Remove(dll, n) Custom_DLL_Remove(dll, n, first, last, next, prev)
 #endif
