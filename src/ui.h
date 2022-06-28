@@ -156,6 +156,7 @@ UI_Box *ui_box_make();
 UI_Size ui_pixel_size(f32 pixels);
 UI_Size ui_parent_percent_size(f32 percent);
 UI_Size ui_children_sum_size();
+UI_Size ui_text_content_size();
 void ui_render_rect(UI_Rect *rect);
 void ui_set_arena(Mem_Arena *arena);
 void ui_render();
@@ -373,6 +374,10 @@ UI_Size ui_children_sum_size() {
     return (UI_Size){UI_Size_Kind_Children_Sum, 1.0f, 0.0f};
 }
 
+UI_Size ui_text_content_size(f32 padding) {
+    return (UI_Size){UI_Size_Kind_Text_Content, 1.0f, padding};
+}
+
 Mem_Arena *ui_frame_arena() {
     return &global_ui_state->frame_arena[global_ui_state->current_frame % 2];
 }
@@ -411,7 +416,14 @@ void ui_layout_independent_sizes(UI_Box *box, UI_Axis axis) {
             box->fixed_size.data[axis] = box->size[axis].value;
         } break;
 
-            //case UI_Size_Kind_Text_Content:
+        case UI_Size_Kind_Text_Content: {
+            f32 padding = box->size[axis].value;
+            if (axis == UI_Axis_X) {
+                box->fixed_size.data[axis] = box->text.size * global_ui_state->font.max_advance + padding;
+            } else if (axis == UI_Axis_Y) {
+                box->fixed_size.data[axis] = global_ui_state->font.max_height + padding;
+            }
+        } break;
     }
 
     for (UI_Box *child = box->first; child; child = child->next) {

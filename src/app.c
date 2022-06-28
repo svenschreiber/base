@@ -139,8 +139,8 @@ void app_update() {
     ui_pop_parent();
 
     UI_Box *box3 = ui_box_make(UI_Box_Flag_Fixed_Width | UI_Box_Flag_Fixed_Height, Str("3"));
-    box3->size[UI_Axis_X] = ui_pixel_size(50.0f);
-    box3->size[UI_Axis_Y] = ui_pixel_size(30.0f);
+    box3->size[UI_Axis_X] = ui_text_content_size(0.0f);
+    box3->size[UI_Axis_Y] = ui_text_content_size(0.0f);
     box3->style.background = vec4(0.5f, 0.5f, 0.5f, 1.0f);
     ui_end();
 
