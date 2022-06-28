@@ -114,34 +114,35 @@ void app_update() {
     render_triangle_gradient(time);
     
     ui_begin(ui, platform_state);
-    UI_Box *box1 = ui_box_make(UI_Box_Flag_Fixed_Width | UI_Box_Flag_Fixed_Height, Str("1"));
+    UI_Box *box1 = ui_box_make(UI_Box_Flag_Fixed_Width | UI_Box_Flag_Fixed_Height | UI_Box_Flag_Draw_Background, Str("1"));
     box1->size[UI_Axis_X] = ui_pixel_size(50.0f);
     box1->size[UI_Axis_Y] = ui_pixel_size(30.0f);
     box1->style.background = vec4(0.25f * sinf(time) + 0.75f, 0.0f, 0.0f, 1.0f);
 
-    UI_Box *box2 = ui_box_make(UI_Box_Flag_Fixed_Height, Str("2"));
+    UI_Box *box2 = ui_box_make(UI_Box_Flag_Fixed_Height | UI_Box_Flag_Draw_Background, Str("2"));
     box2->size[UI_Axis_X] = ui_parent_percent_size(0.2f);//ui_children_sum_size();
     box2->size[UI_Axis_Y] = ui_pixel_size(30.0f);
     box2->style.background = vec4(0.0f, 0.5f, 0.0f, 1.0f);
 
     ui_push_parent(box2);
-    UI_Box *box4 = ui_box_make(UI_Box_Flag_Fixed_Width | UI_Box_Flag_Fixed_Height, Str("4"));
+    UI_Box *box4 = ui_box_make(UI_Box_Flag_Fixed_Width | UI_Box_Flag_Fixed_Height | UI_Box_Flag_Draw_Background, Str("4"));
     box4->size[UI_Axis_X] = ui_pixel_size(30.0f * sinf(time) + 30.0f);
     box4->size[UI_Axis_X].strictness = 0.0f;
     box4->size[UI_Axis_Y] = ui_pixel_size(15.0f);
     box4->style.background = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
-    UI_Box *box5 = ui_box_make(UI_Box_Flag_Fixed_Width | UI_Box_Flag_Fixed_Height, Str("5"));
+    UI_Box *box5 = ui_box_make(UI_Box_Flag_Fixed_Width | UI_Box_Flag_Fixed_Height | UI_Box_Flag_Draw_Background, Str("5"));
     box5->size[UI_Axis_X] = ui_pixel_size(30.0f);
     box5->size[UI_Axis_X].strictness = 0.5f;
     box5->size[UI_Axis_Y] = ui_pixel_size(15.0f);
     box5->style.background = vec4(1.0f, 0.0f, 1.0f, 1.0f);
     ui_pop_parent();
 
-    UI_Box *box3 = ui_box_make(UI_Box_Flag_Fixed_Width | UI_Box_Flag_Fixed_Height, Str("3"));
-    box3->size[UI_Axis_X] = ui_text_content_size(0.0f);
-    box3->size[UI_Axis_Y] = ui_text_content_size(0.0f);
+    UI_Box *box3 = ui_box_make(UI_Box_Flag_Fixed_Width | UI_Box_Flag_Fixed_Height | UI_Box_Flag_Draw_Background | UI_Box_Flag_Draw_Text, Str("Please click me!"));
+    box3->size[UI_Axis_X] = ui_text_content_size(10.0f);
+    box3->size[UI_Axis_Y] = ui_text_content_size(10.0f);
     box3->style.background = vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    box3->style.text       = vec4(1.0f, 1.0f, 1.0f, 1.0f);
     ui_end();
 
     ui_render(ui);

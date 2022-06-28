@@ -63,7 +63,6 @@ struct UI_Size {
 typedef enum UI_Box_Flags UI_Box_Flags;
 enum UI_Box_Flags {
     UI_Box_Flag_Clickable           = (1 << 0),
-    // ...
     UI_Box_Flag_Fixed_Width         = (1 << 1),
     UI_Box_Flag_Fixed_Height        = (1 << 2),
     UI_Box_Flag_Floating_X          = (1 << 3),
@@ -71,7 +70,8 @@ enum UI_Box_Flags {
     UI_Box_Flag_Allow_Overflow_X    = (1 << 5),
     UI_Box_Flag_Allow_Overflow_Y    = (1 << 6),
     UI_Box_Flag_Clip                = (1 << 7),
-    UI_Box_Flag_Draw_Background     = (1 << 8)
+    UI_Box_Flag_Draw_Background     = (1 << 8),
+    UI_Box_Flag_Draw_Text           = (1 << 9)
 };
 
 typedef struct UI_Box_Style UI_Box_Style;
@@ -585,17 +585,46 @@ void ui_render_box(UI_Box *box) {
     UI_Rect *rect = &box->rect;
     UI_Box_Style *style = &box->style;
     vec4 bg = style->background;
+    vec4 text = style->text;
+    UI_Font_Data *font = &global_ui_state->font;
 
-    glBegin(GL_TRIANGLES);
-    glColor3f(bg.r, bg.g, bg.b);
-    glVertex3f(rect->p0.x, rect->p0.y, 0.0f);
-    glVertex3f(rect->p0.x, rect->p1.y, 0.0f);
-    glVertex3f(rect->p1.x, rect->p1.y, 0.0f);
+    if (box->flags & UI_Box_Flag_Draw_Background) {
+        glBegin(GL_TRIANGLES);
+        glColor3f(bg.r, bg.g, bg.b);
+        glVertex3f(rect->p0.x, rect->p0.y, 0.0f);
+        glVertex3f(rect->p0.x, rect->p1.y, 0.0f);
+        glVertex3f(rect->p1.x, rect->p1.y, 0.0f);
 
-    glVertex3f(rect->p0.x, rect->p0.y, 0.0f);
-    glVertex3f(rect->p1.x, rect->p1.y, 0.0f);
-    glVertex3f(rect->p1.x, rect->p0.y, 0.0f);
-    glEnd();
+        glVertex3f(rect->p0.x, rect->p0.y, 0.0f);
+        glVertex3f(rect->p1.x, rect->p1.y, 0.0f);
+        glVertex3f(rect->p1.x, rect->p0.y, 0.0f);
+        glEnd();
+    }
+
+    if (box->flags & UI_Box_Flag_Draw_Text) {
+        stbtt_aligned_quad q;
+        f32 x = rect->p0.x + (box->size[UI_Axis_X].value / 2);
+        f32 y = rect->p1.y + font->max_descent - (box->size[UI_Axis_Y].value / 2);
+        // TODO: Get the actual display text
+        for (u64 i = 0; i < box->text.size; ++i) {
+            stbtt_GetPackedQuad(font->char_data, font->bm_width, font->bm_height, box->text.str[i], &x, &y, &q, 0);
+            glColor3f(text.x, text.y, text.z);
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, font->texture_id);
+            glBegin(GL_QUADS);
+            glTexCoord2f(q.s0, q.t0);
+            glVertex3f(q.x0, q.y0, 0.0f);
+            glTexCoord2f(q.s1, q.t0);
+            glVertex3f(q.x1, q.y0, 0.0f);
+            glTexCoord2f(q.s1, q.t1);
+            glVertex3f(q.x1, q.y1, 0.0f);
+            glTexCoord2f(q.s0, q.t1);
+            glVertex3f(q.x0, q.y1, 0.0f);
+            glEnd();
+            glDisable(GL_TEXTURE_2D);
+
+        }
+    }
 }
 
 // render the tree by rendering next boxes first (on same layer)
