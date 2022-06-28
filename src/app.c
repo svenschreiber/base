@@ -9,6 +9,8 @@
 #include "string.h"
 #include "key_input.h"
 #include "opengl.h"
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "ext/stb_truetype.h"
 #define UI_IMPL
 #include "ui.h"
 #include "app.h"
@@ -72,9 +74,11 @@ void app_init() {
 
     platform_state->events = PushData(arena, Platform_Event, PLATFORM_MAX_EVENTS);
 
-    ui = ui_state_make();
-
     load_gl_functions();
+
+    UI_Font_Data font = ui_font_load(arena, "res/consolas.ttf", 18.0f);
+    ui = ui_state_make(font); // TODO: load font
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

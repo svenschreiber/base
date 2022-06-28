@@ -123,11 +123,24 @@ struct UI_Hash_Table {
     u32 num_buckets;
 };
 
+typedef struct UI_Font_Data UI_Font_Data;
+struct UI_Font_Data {
+    stbtt_packedchar *char_data;
+    u32 bm_width;
+    u32 bm_height;
+    u32 texture_id;
+    f32 max_advance;
+    f32 max_ascent;
+    f32 max_descent;
+    f32 max_height;
+};
+
 typedef struct UI_State UI_State;
 struct UI_State {
     Mem_Arena arena;
     Mem_Arena frame_arena[2];
-    
+    UI_Font_Data font;
+
     UI_Box *root;
     UI_Box *current_parent;
     UI_Hash_Table hash_table;
@@ -146,7 +159,7 @@ UI_Size ui_children_sum_size();
 void ui_render_rect(UI_Rect *rect);
 void ui_set_arena(Mem_Arena *arena);
 void ui_render();
-UI_State *ui_state_make();
+UI_State *ui_state_make(UI_Font_Data font);
 void ui_begin(UI_State *state, Platform_State *p_state);
 void ui_end();
 void ui_push_parent(UI_Box *box);
@@ -161,6 +174,7 @@ UI_Key ui_key_from_string(Mem_Arena *arena, String str);
 void ui_hash_table_put(UI_Hash_Table *table, UI_Box *box);
 void ui_hash_table_remove(UI_Hash_Table *table, UI_Box *box);
 Mem_Arena *ui_frame_arena();
+UI_Font_Data ui_font_load(Mem_Arena *arena, char *font_path, f32 font_size);
 
 // +================+
 // | IMPLEMENTATION |
@@ -257,6 +271,48 @@ void ui_hash_table_remove(UI_Hash_Table *table, UI_Box *box) {
     Custom_DLL_Remove(bucket, box, first, last, hash_next, hash_prev);
 }
 
+UI_Font_Data ui_font_load(Mem_Arena *arena, char *font_path, f32 font_size) {
+    UI_Font_Data font = {0};
+
+    Platform_File font_file;
+    platform_read_entire_file(font_path, &font_file);
+
+    u32 num_chars  = 512; // TODO: need more?
+    font.char_data = PushData(arena, stbtt_packedchar, num_chars);
+    font.bm_width  = 1024;
+    font.bm_height = 512;
+    
+    u8 *bitmap = PushData(arena, u8, font.bm_width * font.bm_height);
+    f32 scaled_font_size = STBTT_POINT_SIZE(font_size);
+    stbtt_pack_context pc;
+    stbtt_PackBegin(&pc, bitmap, font.bm_width, font.bm_height, 0, 1, 0);
+    stbtt_PackSetOversampling(&pc, 2, 2); // @Hardcode
+    stbtt_PackFontRange(&pc, font_file.data, 0, scaled_font_size, 32, num_chars - 32, font.char_data + 32);
+    glGenTextures(1, &font.texture_id);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, font.texture_id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, font.bm_width, font.bm_height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, bitmap);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    stbtt_fontinfo font_info;
+    stbtt_InitFont(&font_info, font_file.data, 0);
+    s32 ascent, descent, line_gap;
+    s32 advance, lsb;
+    stbtt_GetFontVMetrics(&font_info, &ascent, &descent, &line_gap);
+    stbtt_GetGlyphHMetrics(&font_info, (s32)'a', &advance, &lsb); // @Hardcode: only works for monospaced fonts
+    f32 scale_factor = stbtt_ScaleForMappingEmToPixels(&font_info, font_size);
+
+    platform_release_memory(font_file.data);
+
+    font.max_advance = scale_factor * advance;
+    font.max_ascent  = scale_factor * (ascent + line_gap);
+    font.max_descent = scale_factor * descent;
+    font.max_height  = scale_factor * (ascent - descent + line_gap);
+
+    return font;
+}
+
 void ui_push_parent(UI_Box *box) {
     global_ui_state->current_parent = box;
 }
@@ -321,12 +377,13 @@ Mem_Arena *ui_frame_arena() {
     return &global_ui_state->frame_arena[global_ui_state->current_frame % 2];
 }
 
-UI_State *ui_state_make() {
+UI_State *ui_state_make(UI_Font_Data font) {
     Mem_Arena arena = mem_arena_init(GB(64));
     UI_State *state = PushStructZero(&arena, UI_State);
     state->arena = arena;
     state->frame_arena[0] = mem_arena_init(GB(1));
     state->frame_arena[1] = mem_arena_init(GB(1));
+    state->font = font;
     state->hash_table.num_buckets = HASH_TABLE_MAX;
 
     return state;
