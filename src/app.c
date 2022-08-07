@@ -77,7 +77,7 @@ void app_init() {
     load_gl_functions();
 
     UI_Font_Data font = ui_font_load(arena, "res/consolas.ttf", 18.0f);
-    ui = ui_state_make(font); // TODO: load font
+    ui = ui_state_make(font);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -97,7 +97,7 @@ void render_triangle_gradient(f32 time) {
     glVertex3f(w * 0.25f, h * 0.75f, 0.0f);
     glColor3f(0.3f * sinf(time + PI) + 0.7f, 0.0f, sinf(time + 0.3f * PI) + 0.7f);
     glVertex3f(w * 0.75f, h * 0.75f, 0.0f);
-    glColor3f(0.3f * sinf(time + PI) + 0.7f, 0.0f, 0.3f * sinf(time + 0.8f * PI) + 0.7f);
+    glColor3f(0.3f * sinf(time + PI) + 0.7f, 1.0f, 0.3f * sinf(time + 0.8f * PI) + 0.7f);
     glVertex3f(w * 0.5f, h * 0.25f, 0.0f);
     glEnd();
 }
@@ -115,6 +115,7 @@ void app_update() {
     
     ui_begin(ui, platform_state);
     UI_Box *box1 = ui_box_make(UI_Box_Flag_Fixed_Width | UI_Box_Flag_Fixed_Height | UI_Box_Flag_Draw_Background, Str("1"));
+    
     box1->size[UI_Axis_X] = ui_pixel_size(50.0f);
     box1->size[UI_Axis_Y] = ui_pixel_size(30.0f);
     box1->style.background = vec4(0.25f * sinf(time) + 0.75f, 0.0f, 0.0f, 1.0f);
@@ -143,6 +144,7 @@ void app_update() {
     box3->size[UI_Axis_Y] = ui_text_content_size(10.0f);
     box3->style.background = vec4(0.5f, 0.5f, 0.5f, 1.0f);
     box3->style.text       = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    
     ui_end();
 
     ui_render(ui);

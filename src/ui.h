@@ -26,6 +26,12 @@
 // | DEFINTIONS |
 // +============+
 
+typedef struct UI_Interaction UI_Interaction;
+struct UI_Interaction {
+    b32 hovered;
+    b32 clicked;
+};
+
 typedef struct UI_Key UI_Key;
 struct UI_Key {
     u32 hash;
@@ -174,6 +180,8 @@ void ui_layout_position(UI_Box *box, UI_Axis axis);
 UI_Key ui_key_from_string(Mem_Arena *arena, String str);
 void ui_hash_table_put(UI_Hash_Table *table, UI_Box *box);
 void ui_hash_table_remove(UI_Hash_Table *table, UI_Box *box);
+UI_Box *ui_hash_table_get(UI_Hash_Table *table, UI_Key key);
+UI_Box *ui_hash_table_get_cached(UI_Hash_Table *table, UI_Key key);
 Mem_Arena *ui_frame_arena();
 UI_Font_Data ui_font_load(Mem_Arena *arena, char *font_path, f32 font_size);
 
@@ -270,6 +278,24 @@ void ui_hash_table_put(UI_Hash_Table *table, UI_Box *box) {
 void ui_hash_table_remove(UI_Hash_Table *table, UI_Box *box) {
     UI_Hash_Table_Bucket *bucket = ui_hash_table_bucket_from_box(table, box);
     Custom_DLL_Remove(bucket, box, first, last, hash_next, hash_prev);
+}
+
+UI_Box *ui_hash_table_get(UI_Hash_Table *table, UI_Key key) {
+    u32 index = key.hash % table->num_buckets;
+    UI_Hash_Table_Bucket *bucket = &table->buckets[index];
+    for (UI_Box *box = bucket->first; box; box = box->hash_next) {
+        if (box->key.hash == key.hash) return box;
+    }
+    return 0;
+}
+
+UI_Box *ui_hash_table_get_cached(UI_Hash_Table *table, UI_Key key) {
+    u32 index = key.hash % table->num_buckets;
+    UI_Hash_Table_Bucket *bucket = &table->buckets[index];
+    for (UI_Box *box = bucket->first; box; box = box->hash_next) {
+        if (box->key.hash == key.hash && box->frame_created < global_ui_state->current_frame) return box;
+    }
+    return 0;    
 }
 
 UI_Font_Data ui_font_load(Mem_Arena *arena, char *font_path, f32 font_size) {
@@ -394,6 +420,17 @@ UI_State *ui_state_make(UI_Font_Data font) {
     return state;
 }
 
+b32 is_hovered(UI_Box *box, ivec2 mouse_pos) {
+    UI_Box *cached_box = ui_hash_table_get_cached(&global_ui_state->hash_table, box->key);
+    if (cached_box) {
+        UI_Rect rect = cached_box->rect;
+        if (mouse_pos.x >= rect.p0.x && mouse_pos.x <= rect.p1.x && mouse_pos.y >= rect.p0.y && mouse_pos.y <= rect.p1.y) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 UI_Box *ui_box_make(UI_Box_Flags flags, String text) {
     UI_Box *parent = global_ui_state->current_parent;
     UI_Box *box = PushStructZero(ui_frame_arena(), UI_Box);
@@ -404,6 +441,7 @@ UI_Box *ui_box_make(UI_Box_Flags flags, String text) {
 
     box->key = ui_key_from_string(ui_frame_arena(), box->text);
     box->frame_created = global_ui_state->current_frame;
+
     ui_hash_table_put(&global_ui_state->hash_table, box);
 
     DLL_PushBack(parent, box);
