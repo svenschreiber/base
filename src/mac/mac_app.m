@@ -1,69 +1,147 @@
 #import <Cocoa/Cocoa.h>
+#import <OpenGL/gl3.h>
 
-@interface MacView : NSView {
+static GLuint program;
+static GLuint vao;
 
+void init() {
+    static const char * vs_source[] =
+    {
+        "#version 410 core                                                 \n"
+        "                                                                  \n"
+        "void main(void)                                                   \n"
+        "{                                                                 \n"
+        "    const vec4 vertices[] = vec4[](vec4( 0.25, -0.25, 0.5, 1.0),  \n"
+        "                                   vec4(-0.25, -0.25, 0.5, 1.0),  \n"
+        "                                   vec4( 0.25,  0.25, 0.5, 1.0)); \n"
+        "                                                                  \n"
+        "    gl_Position = vertices[gl_VertexID];                          \n"
+        "}                                                                 \n"
+    };
+
+    static const char * fs_source[] =
+    {
+        "#version 410 core                                                 \n"
+        "                                                                  \n"
+        "out vec4 color;                                                   \n"
+        "                                                                  \n"
+        "void main(void)                                                   \n"
+        "{                                                                 \n"
+        "    color = vec4(0.0, 0.8, 1.0, 1.0);                             \n"
+        "}                                                                 \n"
+    };
+
+    program = glCreateProgram();
+    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fs, 1, fs_source, NULL);
+    glCompileShader(fs);
+
+    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vs, 1, vs_source, NULL);
+    glCompileShader(vs);
+
+    glAttachShader(program, vs);
+    glAttachShader(program, fs);
+
+    glLinkProgram(program);
+
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
 }
-- (void)drawRect:(NSRect)rect;
+
+void update() {
+    static const GLfloat green[] = { 0.0f, 0.25f, 0.0f, 1.0f };
+    glClearBufferfv(GL_COLOR, 0, green);
+
+    glUseProgram(program);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+
+@interface MacApp : NSWindow<NSApplicationDelegate>
+
+@property (nonatomic, retain) NSOpenGLView *glView;
+- (void)drawLoop:(NSTimer *)timer;
+
 @end
 
-@implementation MacView
+@implementation MacApp
 
-#define X(t) (sin(t) + 1) * width * 0.5
-#define Y(t) (cos(t) + 1) * height * 0.5
+@synthesize glView;
 
-- (void)drawRect:(NSRect)rect {
-    double f,g;
-    const double pi = 2.0 * acos(0.0);
+BOOL shouldStop = NO;
 
-    int n = 12;
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(enum NSWindowStyleMask)aStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag {
+    if (self = [super initWithContentRect:contentRect styleMask:aStyle backing:bufferingType defer:flag]) {
+        [self setTitle:[[NSProcessInfo processInfo] processName]];
 
-    float width = [self bounds].size.width;
-    float height = [self bounds].size.height;
+        NSOpenGLPixelFormatAttribute pixelFormatAttributes[] = {
+            NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
+                NSOpenGLPFAColorSize, 24,
+                NSOpenGLPFAAlphaSize, 8,
+                NSOpenGLPFADoubleBuffer,
+                NSOpenGLPFAAccelerated,
+                NSOpenGLPFANoRecovery,
+                0
+        };
 
-    [[NSColor whiteColor] set];
-    NSRectFill([self bounds]);
+        NSOpenGLPixelFormat* format = [[NSOpenGLPixelFormat alloc]initWithAttributes:pixelFormatAttributes];
+        glView = [[NSOpenGLView alloc]initWithFrame:contentRect pixelFormat:format];
+        
+        [[glView openGLContext]makeCurrentContext];
+      
+        [self setContentView:glView];
+        [glView prepareOpenGL];
+        [self makeKeyAndOrderFront:self];
+        [self setAcceptsMouseMovedEvents:YES];
+        [self makeKeyWindow];
+        [self setOpaque:YES];
 
-    [[NSColor blackColor] set];
-    
-    for (f = 0; f < 2 * pi; f += 2.0 * pi / n) {
-        for (g = 0; g < 2.0 * pi; g += pi / n) {
-            NSPoint p1 = NSMakePoint(X(f), Y(f));
-            NSPoint p2 = NSMakePoint(X(g), Y(g));
-            [NSBezierPath strokeLineFromPoint:p1 toPoint:p2];
-        }
+        init();
     }
+    return self;
 }
 
 - (void)windowWillClose:(NSNotification *)notification {
     [NSApp terminate:self];
 }
-@end
 
-void setup() {
-    NSWindow *window;
-    NSView *view;
-    NSRect rect;
-
-    rect = NSMakeRect(100.0, 350.0, 400.0, 400.0);
-    window = [[NSWindow alloc] initWithContentRect: rect
-                                         styleMask:NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskMiniaturizable|NSWindowStyleMaskResizable
-                                           backing:NSBackingStoreBuffered
-                                             defer:NO];
-
-    [window setTitle:@"Mac Application"];
-    view = [[[MacView alloc] initWithFrame:rect] autorelease];
-    [window setContentView:view];
-    [window setDelegate:view];
-    [window makeKeyAndOrderFront:nil];
+- (void)drawLoop:(NSTimer *)timer {
+    if (shouldStop) {
+        [self close];
+        return;
+    }
+    if ([self isVisible]) {
+        update();
+        [glView update];
+        [[glView openGLContext] flushBuffer];
+    }
 }
+
+- (void)applicationDidFinishLaunching:(NSNotification *)notification {
+    [NSTimer scheduledTimerWithTimeInterval:0.000001 target:self selector:@selector(drawLoop:) userInfo:nil repeats:YES];
+}
+
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication     *)theApplication{
+    return YES;
+}
+
+- (void)applicationWillTerminate:(NSNotification *)aNotification{
+    shouldStop = YES;
+}
+
+@end
 
 int main(int argc, char **argv) {
     @autoreleasepool {
-       NSApp = [NSApplication sharedApplication];
+        MacApp *app;
+        NSApplication *application = [NSApplication sharedApplication];
+        [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 
-       setup();
+        app = [[MacApp alloc] initWithContentRect:NSMakeRect(200, 200, 600, 600) styleMask:NSWindowStyleMaskTitled|NSWindowStyleMaskMiniaturizable|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable backing:NSBackingStoreBuffered defer:YES];
 
-       [NSApp run];
+        [application setDelegate:app];
+        [application run];
     }
     
     return 0;
