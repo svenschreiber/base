@@ -508,7 +508,7 @@ void ui_layout_downwards_dependent(UI_Box *box, UI_Axis axis) {
                     if (axis == box->child_layout_axis) {
                         sum += child->fixed_size.data[axis];
                     } else {
-                        sum = fmax(sum, child->fixed_size.data[axis]);
+                        sum = fmaxf(sum, child->fixed_size.data[axis]);
                     }
                 }
             }
@@ -566,7 +566,7 @@ void ui_layout_enforce_constraints(UI_Box *box, UI_Axis axis) {
                         if (child->fixed_size.data[axis] - current_fixup_size < child->min_size.data[axis]) {
                             current_fixup_size = child->fixed_size.data[axis] - child->min_size.data[axis];
                         }
-                        current_fixup_size = fmax(0, current_fixup_size);
+                        current_fixup_size = fmaxf(0, current_fixup_size);
                         child_fixups[child_index] = current_fixup_size;
                         child_fixup_sum += current_fixup_size;
                     }
@@ -603,7 +603,7 @@ void ui_layout_position(UI_Box *box, UI_Axis axis) {
                 current_pos += child->fixed_size.data[axis];
                 bounds += child->fixed_size.data[axis];
             } else {
-                bounds = fmax(bounds, child->fixed_size.data[axis]);
+                bounds = fmaxf(bounds, child->fixed_size.data[axis]);
             }
         }
 

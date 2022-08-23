@@ -24,7 +24,7 @@ void platform_commit_memory(void *mem, u64 size) {
     VirtualAlloc(mem, size, MEM_COMMIT, PAGE_READWRITE);
 }
 
-void platform_release_memory(void *mem) {
+void platform_release_memory(void *mem, u64 size) {
     VirtualFree(mem, 0, MEM_RELEASE);
 }
 
@@ -50,7 +50,7 @@ b32 platform_read_entire_file(char *file_name, Platform_File *result) {
     if (result->size == bytes_read) {
         return 1;
     } else {
-        platform_release_memory(result->data);
+        platform_release_memory(result->data, result->size);
         return 0;
     }
 }
