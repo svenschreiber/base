@@ -37,7 +37,7 @@ struct UI_Key {
     u32 hash;
 };
 
-typedef enum UI_Axis UI_Axis;
+typedef s32 UI_Axis;
 enum UI_Axis{
     UI_Axis_X,
     UI_Axis_Y,
@@ -50,7 +50,7 @@ struct UI_Rect {
     vec2 p1;
 };
 
-typedef enum UI_Size_Kind UI_Size_Kind;
+typedef s32 UI_Size_Kind;
 enum UI_Size_Kind {
     UI_Size_Kind_Null,
     UI_Size_Kind_Pixels,
@@ -66,7 +66,7 @@ struct UI_Size {
     f32 value;
 };
 
-typedef enum UI_Box_Flags UI_Box_Flags;
+typedef s32 UI_Box_Flags;
 enum UI_Box_Flags {
     UI_Box_Flag_Clickable           = (1 << 0),
     UI_Box_Flag_Fixed_Width         = (1 << 1),
@@ -162,7 +162,7 @@ UI_Box *ui_box_make();
 UI_Size ui_pixel_size(f32 pixels);
 UI_Size ui_parent_percent_size(f32 percent);
 UI_Size ui_children_sum_size();
-UI_Size ui_text_content_size();
+UI_Size ui_text_content_size(f32 padding);
 void ui_render_rect(UI_Rect *rect);
 void ui_set_arena(Mem_Arena *arena);
 void ui_render();
@@ -330,7 +330,7 @@ UI_Font_Data ui_font_load(Mem_Arena *arena, char *font_path, f32 font_size) {
     stbtt_GetGlyphHMetrics(&font_info, (s32)'a', &advance, &lsb); // @Hardcode: only works for monospaced fonts
     f32 scale_factor = stbtt_ScaleForMappingEmToPixels(&font_info, font_size);
 
-    platform_release_memory(font_file.data);
+    platform_release_memory(font_file.data, font_file.size);
 
     font.max_advance = scale_factor * advance;
     font.max_ascent  = scale_factor * (ascent + line_gap);
@@ -508,7 +508,7 @@ void ui_layout_downwards_dependent(UI_Box *box, UI_Axis axis) {
                     if (axis == box->child_layout_axis) {
                         sum += child->fixed_size.data[axis];
                     } else {
-                        sum = max(sum, child->fixed_size.data[axis]);
+                        sum = fmax(sum, child->fixed_size.data[axis]);
                     }
                 }
             }
@@ -566,7 +566,7 @@ void ui_layout_enforce_constraints(UI_Box *box, UI_Axis axis) {
                         if (child->fixed_size.data[axis] - current_fixup_size < child->min_size.data[axis]) {
                             current_fixup_size = child->fixed_size.data[axis] - child->min_size.data[axis];
                         }
-                        current_fixup_size = max(0, current_fixup_size);
+                        current_fixup_size = fmax(0, current_fixup_size);
                         child_fixups[child_index] = current_fixup_size;
                         child_fixup_sum += current_fixup_size;
                     }
@@ -603,7 +603,7 @@ void ui_layout_position(UI_Box *box, UI_Axis axis) {
                 current_pos += child->fixed_size.data[axis];
                 bounds += child->fixed_size.data[axis];
             } else {
-                bounds = max(bounds, child->fixed_size.data[axis]);
+                bounds = fmax(bounds, child->fixed_size.data[axis]);
             }
         }
 

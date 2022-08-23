@@ -158,6 +158,8 @@ void app_update() {
 
 #if defined(BUILD_WIN32)
 #include "win32/win32_app.c"
+#elif defined(BUILD_MACOS)
+#include "mac/mac_app.m"
 #else
 #error The specified platform is not yet supported. Make sure the correct define is set in the build file.
 #endif

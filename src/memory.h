@@ -106,7 +106,7 @@ u64 round_up_next_pow2(u64 n);
 
 Mem_Arena mem_arena_init_with_align(u64 align, u64 size) {
     Mem_Arena arena = {0};
-    arena.max        = MEM_ARENA_MAX;
+    arena.max        = size;
     arena.data       = platform_reserve_memory(arena.max);
     arena.alloc_pos  = 0;
     arena.commit_pos = 0;
@@ -141,7 +141,7 @@ void mem_arena_pop(Mem_Arena *arena, u64 size) {
 }
 
 void mem_arena_release(Mem_Arena *arena) {
-    platform_release_memory(arena->data);
+    platform_release_memory(arena->data, arena->max);
 }
 
 void mem_arena_clear(Mem_Arena *arena) {

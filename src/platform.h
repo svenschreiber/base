@@ -43,8 +43,8 @@ enum Platform_Event_Type {
     Platform_Event_Type_Cursor_Enter
 };
 
-typedef enum Key_Modifiers Key_Modifiers;
-typedef enum Key Key;
+typedef s32 Key_Modifiers;
+typedef s32 Key;
 
 typedef struct Platform_Event Platform_Event;
 struct Platform_Event {
@@ -83,7 +83,7 @@ void platform_log(char *format, ...);
 b32 platform_read_entire_file(char *file_name, Platform_File *result);
 void *platform_reserve_memory(u64 size);
 void platform_commit_memory(void *mem, u64 size);
-void platform_release_memory(void *mem);
+void platform_release_memory(void *mem, u64 size);
 void platform_decommit(void *mem, u64 size);
 void platform_swap_buffers();
 void *platform_get_gl_proc_address(char *function_name);

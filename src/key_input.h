@@ -1,7 +1,7 @@
 #ifndef KEY_INPUT_H
 #define KEY_INPUT_H
 
-typedef enum Key Key;
+typedef s32 Key;
 enum Key {
 #define Key(name, str) KEY_##name,
 #include "key_list.inc"
@@ -9,7 +9,7 @@ enum Key {
     KEY_MAX
 };
 
-typedef enum Key_Modifiers Key_Modifiers;
+typedef s32 Key_Modifiers;
 enum Key_Modifiers {
     KEY_MODIFIER_CTRL  = (1<<0),
     KEY_MODIFIER_SHIFT = (1<<1),

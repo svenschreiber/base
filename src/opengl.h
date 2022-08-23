@@ -39,17 +39,23 @@ GLProc(glGenerateMipmap, GLGENERATEMIPMAP)
 #ifdef _WIN32
 #include <windows.h>
 #include <gl/gl.h>
-#endif
 #include "ext/glext.h"
 
 #define GLProc(name, type) PFN##type##PROC name = 0;
 GL_PROC_LIST
 #undef GLProc
 
+#elif defined(BUILD_MACOS)
+#include <OpenGL/gl.h>
+#include <OpenGL/glext.h>
+#endif
+
 void load_gl_functions() {
+#ifdef _WIN32
 #define GLProc(name, type) name = (PFN##type##PROC)platform_get_gl_proc_address(#name);
 GL_PROC_LIST
 #undef GLProc
+#endif
 }
 
 #endif
