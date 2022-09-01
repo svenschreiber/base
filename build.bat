@@ -18,5 +18,5 @@ popd
 
 if %ERRORLEVEL% EQU 0 (
    echo ^>^> run_tree\%project_name%.exe
-   if "%1"=="-run" (start "" run_tree\%project_name%.exe)
+   if "%1"=="-run" (call run_tree\%project_name%.exe)
 )
